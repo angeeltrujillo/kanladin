@@ -43,6 +43,8 @@ export const Card = ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 999 : 1,
+    boxShadow: isDragging ? '0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23)' : 'none',
   };
 
   const handleEdit = () => {

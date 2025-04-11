@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Board } from './components/Board';
-import { CardProps } from './components/Card';
+import { Card, CardProps } from './components/Card';
 import { ColumnProps } from './components/Column';
-import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
 // Initial demo data
@@ -37,6 +37,7 @@ function App() {
   const [columns, setColumns] = useState<ColumnProps[]>(initialColumns);
   const [nextCardId, setNextCardId] = useState(7);
   const [nextColumnId, setNextColumnId] = useState(4);
+  const [activeCard, setActiveCard] = useState<CardProps | null>(null);
 
   // Setup sensors for drag and drop
   const sensors = useSensors(
@@ -100,9 +101,29 @@ function App() {
     })));
   };
 
+  // Handle drag start event to set the active card
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const activeData = active.data.current;
+    
+    // Only set active card if we're dragging a card (not a column)
+    if (activeData?.type === 'card') {
+      // Find the card in the columns
+      columns.forEach(column => {
+        const foundCard = column.cards.find(card => card.id === active.id);
+        if (foundCard) {
+          setActiveCard({...foundCard, columnId: column.id});
+        }
+      });
+    }
+  };
+
   // Handle drag end event for cards
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    
+    // Reset active card when drag ends
+    setActiveCard(null);
     
     if (!over) return;
     
@@ -228,6 +249,7 @@ function App() {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <div className="h-screen flex flex-col">
@@ -243,6 +265,18 @@ function App() {
           onDeleteCard={handleDeleteCard}
         />
       </div>
+      
+      {/* Drag overlay for floating card effect */}
+      <DragOverlay>
+        {activeCard && (
+          <Card
+            id={activeCard.id}
+            title={activeCard.title}
+            description={activeCard.description}
+            columnId={activeCard.columnId}
+          />
+        )}
+      </DragOverlay>
     </DndContext>
   );
 }
