@@ -64,7 +64,7 @@ export const Column = ({
   return (
     <div 
       ref={setDroppableRef}
-      className={`bg-gray-100 rounded-lg shadow-sm w-72 flex flex-col max-h-[calc(100vh-2rem)] mx-2 ${isOver ? 'ring-2 ring-blue-400' : ''}`}
+      className={`bg-gray-100 rounded-lg shadow-sm w-72 flex flex-col max-h-[90vh] mx-2 ${isOver ? 'ring-2 ring-blue-400' : ''}`}
     >
       <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
         {isEditing ? (
