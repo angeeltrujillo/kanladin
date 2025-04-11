@@ -13,6 +13,12 @@ services:
     environment:
       - DEBUG=True
       - CORS_ORIGINS=["http://localhost:3000", "http://localhost:5173", "http://frontend:80"]
+      - DYNAMODB_ENDPOINT_URL=http://dynamodb-local:8000
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      - dynamodb-local
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]  # Updated port in health check
       interval: 30s
@@ -37,10 +43,11 @@ services:
   dynamodb-local:
     image: amazon/dynamodb-local:latest
     ports:
-      - "8001:8001"
+      - "8001:8000"
     volumes:
       - dynamodb-data:/home/dynamodblocal/data
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data/"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    user: "root"  # Run as root to avoid permission issues
 
 volumes:
   dynamodb-data:
