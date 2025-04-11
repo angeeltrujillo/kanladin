@@ -1,43 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@apollo/client';
 import { Board } from './components/Board';
 import { Card, CardProps } from './components/Card';
 import { ColumnProps } from './components/Column';
 import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
+import { GET_BOARDS } from './apollo/queries';
+import { BoardsData } from './types/graphql';
 
-// Initial demo data
-const initialColumns: ColumnProps[] = [
-  {
-    id: 'col-1',
-    title: 'To Do',
-    cards: [
-      { id: 'card-1', title: 'Research API options', description: 'Compare REST vs GraphQL for our backend' },
-      { id: 'card-2', title: 'Design database schema', description: 'Create initial schema for DynamoDB' },
-      { id: 'card-3', title: 'Setup project structure', description: '' },
-    ]
-  },
-  {
-    id: 'col-2',
-    title: 'In Progress',
-    cards: [
-      { id: 'card-4', title: 'Create UI components', description: 'Build Card and Column components with Tailwind' },
-      { id: 'card-5', title: 'Implement drag and drop', description: 'Use Pragmatic Drag and Drop library' },
-    ]
-  },
-  {
-    id: 'col-3',
-    title: 'Done',
-    cards: [
-      { id: 'card-6', title: 'Project setup', description: 'Initialize repository and configure tools' },
-    ]
-  }
-];
+// Empty columns array for initialization
+const emptyColumns: ColumnProps[] = [];
 
 function App() {
-  const [columns, setColumns] = useState<ColumnProps[]>(initialColumns);
+  const { loading, error, data } = useQuery<BoardsData>(GET_BOARDS);
+  
+  const convertToColumnProps = (data?: BoardsData): ColumnProps[] => {
+    if (!data || !data.boards || data.boards.length === 0) {
+      return emptyColumns;
+    }
+    
+    // Use the first board (we only have one in our demo)
+    const board = data.boards[0];
+    
+    return board.columns.map(column => ({
+      id: column.id,
+      title: column.title,
+      cards: column.cards.map(card => ({
+        id: card.id,
+        title: card.title,
+        description: card.description,
+        columnId: card.columnId
+      }))
+    }));
+  };
+  
+  // Initialize state with data from API or fallback data
+  const [columns, setColumns] = useState<ColumnProps[]>(convertToColumnProps(data));
   const [nextCardId, setNextCardId] = useState(7);
   const [nextColumnId, setNextColumnId] = useState(4);
   const [activeCard, setActiveCard] = useState<CardProps | null>(null);
+  
+  // Update columns when data is loaded from the API
+  useEffect(() => {
+    if (data) {
+      setColumns(convertToColumnProps(data));
+    }
+  }, [data]);
 
   // Setup sensors for drag and drop
   const sensors = useSensors(
@@ -245,6 +253,44 @@ function App() {
     }
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-700">Loading Kanban Board...</h2>
+          <p className="text-gray-500 mt-2">Fetching your boards and tasks from the server</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md text-center max-w-md">
+          <div className="text-red-500 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-700">Error Loading Data</h2>
+          <p className="text-gray-500 mt-2">
+            {error.message || 'There was an error connecting to the server. Please try again later.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -255,7 +301,7 @@ function App() {
       <div className="h-screen flex flex-col">
         <Board
           id="board-1"
-          title="Kanladin Project Board"
+          title={data?.boards[0].title || "Kanladin Project Board 1"}
           columns={columns}
           onAddColumn={handleAddColumn}
           onEditColumn={handleEditColumn}
