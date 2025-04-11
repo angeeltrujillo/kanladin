@@ -19,3 +19,18 @@ class ColumnService:
     def get_columns_by_board_id(board_id: str) -> List[Column]:
         """Get all columns for a specific board"""
         return ColumnRepository.get_by_board_id(board_id)
+    
+    @staticmethod
+    def create_column(column: Column) -> Column:
+        """Create a new column"""
+        return ColumnRepository.create(column)
+    
+    @staticmethod
+    def update_column(column: Column) -> Column:
+        """Update an existing column"""
+        return ColumnRepository.update(column)
+    
+    @staticmethod
+    def delete_column(column_id: str) -> bool:
+        """Delete a column"""
+        return ColumnRepository.delete(column_id)
