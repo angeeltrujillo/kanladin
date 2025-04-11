@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { Card, CardProps } from './Card';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 
 export interface ColumnProps {
   id: string;
@@ -26,6 +28,16 @@ export const Column = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
 
+  const cardIds = cards.map(card => card.id);
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `droppable-${id}`,
+    data: {
+      type: 'column',
+      id
+    }
+  });
+
   const handleEditColumn = () => {
     setIsEditing(true);
   };
@@ -50,8 +62,10 @@ export const Column = ({
   };
 
   return (
-    <div className="bg-gray-100 rounded-lg shadow-sm w-72 flex flex-col max-h-[calc(100vh-2rem)] mx-2">
-      {/* Column Header */}
+    <div 
+      ref={setDroppableRef}
+      className={`bg-gray-100 rounded-lg shadow-sm w-72 flex flex-col max-h-[calc(100vh-2rem)] mx-2 ${isOver ? 'ring-2 ring-blue-400' : ''}`}
+    >
       <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
         {isEditing ? (
           <div className="flex items-center space-x-2">
@@ -95,21 +109,22 @@ export const Column = ({
         )}
       </div>
 
-      {/* Cards Container */}
       <div className="p-2 flex-1 overflow-y-auto space-y-2">
-        {cards.map((card) => (
-          <Card
-            key={card.id}
-            id={card.id}
-            title={card.title}
-            description={card.description}
-            onEdit={onEditCard}
-            onDelete={onDeleteCard}
-          />
-        ))}
+        <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+          {cards.map((card) => (
+            <Card
+              key={card.id}
+              id={card.id}
+              title={card.title}
+              description={card.description}
+              columnId={id}
+              onEdit={onEditCard}
+              onDelete={onDeleteCard}
+            />
+          ))}
+        </SortableContext>
       </div>
 
-      {/* Add Card Button */}
       <div className="p-2 border-t border-gray-200">
         <button
           onClick={handleAddCard}

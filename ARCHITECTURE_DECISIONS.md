@@ -16,15 +16,15 @@ This document outlines the key architectural and design decisions made for the K
 
 ## 2. Frontend
 
-**Decision:** Use React, Apollo Client, Tailwind CSS, Vite and Pragmatic Drag and Drop.
+**Decision:** Use React, Apollo Client, Tailwind CSS, Vite and Drag and Drop, Storybook.
 
 **Rationale:**
 - React is widely adopted and excels for component-based UI like Kanban boards.
 - Apollo Client integrates well with GraphQL and handles caching, mutations, and optimistic UI updates.
 - Tailwind CSS accelerates styling with utility classes, while keeping styles consistent and maintainable.
 - Vite provides a fast and efficient way to build and bundle React applications.
-- Pragmatic Drag and Drop is a simple and effective way to implement drag and drop functionality. Developed by Atlassian, the company that developed Jira and it seems like more active development.
-
+- Drag and Drop is a simple and effective way to implement drag and drop functionality. Developed by Atlassian, the company that developed Jira and it seems like more active development.
+- Storybook is a development environment for UI components, allowing you to build, test, and document components in isolation.
 ---
 
 ## 3. Backend

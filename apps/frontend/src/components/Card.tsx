@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { PencilIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { Menu } from '@headlessui/react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export interface CardProps {
   id: string;
   title: string;
   description: string;
+  columnId?: string;
   onEdit?: (id: string, title: string, description: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -14,12 +17,33 @@ export const Card = ({
   id, 
   title = "New task", 
   description = "", 
+  columnId,
   onEdit, 
   onDelete 
 }: CardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
   const [editedDescription, setEditedDescription] = useState(description);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({
+    id,
+    data: {
+      type: 'card',
+      columnId
+    }
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -39,7 +63,13 @@ export const Card = ({
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200">
+    <div 
+      className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200"
+    {...attributes}
+    {...listeners}
+    ref={setNodeRef}
+    style={style}
+    >
       {isEditing ? (
         // Edit mode
         <div className="space-y-3">
