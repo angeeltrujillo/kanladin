@@ -1,3 +1,5 @@
 fastapi[standard]==0.113.0
 uvicorn==0.21.1
 python-dotenv==1.0.0
+graphene==3.2.2
+starlette-graphene3==0.6.0
