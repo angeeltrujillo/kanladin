@@ -17,8 +17,10 @@ class ColumnService:
     
     @staticmethod
     def get_columns_by_board_id(board_id: str) -> List[Column]:
-        """Get all columns for a specific board"""
-        return ColumnRepository.get_by_board_id(board_id)
+        """Get all columns for a specific board, sorted by order"""
+        columns = ColumnRepository.get_by_board_id(board_id)
+        # Sort columns by order property
+        return sorted(columns, key=lambda column: column.order)
     
     @staticmethod
     def create_column(column: Column) -> Column:

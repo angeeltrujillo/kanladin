@@ -6,7 +6,7 @@ import { ColumnProps } from './components/Column';
 import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { GET_BOARDS } from './apollo/queries';
-import { CREATE_CARD, UPDATE_CARD, DELETE_CARD, MOVE_CARD, UPDATE_CARD_ORDER, CREATE_COLUMN, UPDATE_COLUMN, DELETE_COLUMN } from './apollo/mutations';
+import { CREATE_CARD, UPDATE_CARD, DELETE_CARD, MOVE_CARD, UPDATE_CARD_ORDER, CREATE_COLUMN, UPDATE_COLUMN, DELETE_COLUMN, UPDATE_MULTIPLE_COLUMN_ORDERS } from './apollo/mutations';
 import { BoardsData } from './types/graphql';
 
 // Empty columns array for initialization
@@ -85,6 +85,12 @@ function App() {
   const [updateCardOrderMutation] = useMutation(UPDATE_CARD_ORDER, {
     onCompleted: () => refetch(),
     onError: (error) => console.error('Error updating card order:', error)
+  });
+  
+
+  const [updateMultipleColumnOrdersMutation] = useMutation(UPDATE_MULTIPLE_COLUMN_ORDERS, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error updating multiple column orders:', error)
   });
 
   // Setup sensors for drag and drop
@@ -231,7 +237,7 @@ function App() {
     }
   };
 
-  // Handle drag end event for cards
+  // Handle drag end event for cards and columns
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -243,6 +249,32 @@ function App() {
     // Get data from active and over elements
     const activeData = active.data.current;
     const overData = over.data.current;
+    
+    // Handle column reordering
+    if (activeData?.type === 'column' && overData?.type === 'column') {
+      const activeColumnId = active.id;
+      const overColumnId = over.id;
+      
+      if (activeColumnId !== overColumnId) {
+        const oldIndex = columns.findIndex(col => col.id === activeColumnId);
+        const newIndex = columns.findIndex(col => col.id === overColumnId);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          // Reorder columns
+          const reorderedColumns = arrayMove(columns, oldIndex, newIndex);
+          
+          // Update order property for all columns
+          const updatedColumns = reorderedColumns.map((col, index) => ({
+            ...col,
+            order: index
+          }));
+          
+          // Call the handleReorderColumns function to update the backend
+          handleReorderColumns(updatedColumns);
+        }
+      }
+      return; // Exit early after handling column reordering
+    }
     
     // Handle card movement
     if (activeData?.type === 'card') {
@@ -463,6 +495,22 @@ function App() {
     );
   }
 
+  // Handle column reordering
+  const handleReorderColumns = (reorderedColumns: ColumnProps[]) => {
+    // Get the column IDs in their new order
+    const columnIds = reorderedColumns.map(column => column.id);
+    
+    // Update all column orders in a single mutation
+    updateMultipleColumnOrdersMutation({
+      variables: {
+        columns: columnIds
+      }
+    });
+    
+    // Update the local state optimistically
+    setColumns(reorderedColumns);
+  };
+  
   return (
     <DndContext
       sensors={sensors}
@@ -481,6 +529,7 @@ function App() {
           onAddCard={handleAddCard}
           onEditCard={handleEditCard}
           onDeleteCard={handleDeleteCard}
+          onReorderColumns={handleReorderColumns}
         />
       </div>
       

@@ -130,6 +130,25 @@ class DeleteColumn(graphene.Mutation):
         success = ColumnService.delete_column(id)
         return DeleteColumn(success=success)
 
+class UpdateColumnOrder(graphene.Mutation):
+    """Mutation to update the order of columns"""
+    class Arguments:
+        columns = graphene.List(graphene.NonNull(graphene.ID), required=True)
+    
+    success = graphene.Boolean()
+    
+    def mutate(self, info, columns):
+        # Update the order of each column based on its position in the list
+        for index, column_id in enumerate(columns):
+            column = ColumnService.get_column_by_id(column_id)
+            if not column:
+                raise Exception(f"Column with ID {column_id} not found")
+            
+            column.order = index
+            ColumnService.update_column(column)
+        
+        return UpdateColumnOrder(success=True)
+
 # Card Mutations
 class CreateCard(graphene.Mutation):
     """Mutation to create a new card"""
@@ -353,6 +372,7 @@ class Mutation(graphene.ObjectType):
     create_column = CreateColumn.Field()
     update_column = UpdateColumn.Field()
     delete_column = DeleteColumn.Field()
+    update_column_order = UpdateColumnOrder.Field()
     
     # Card mutations
     create_card = CreateCard.Field()

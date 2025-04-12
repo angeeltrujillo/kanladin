@@ -1,5 +1,6 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { Column, ColumnProps } from './Column';
+import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 
 export interface BoardProps {
   id: string;
@@ -11,6 +12,7 @@ export interface BoardProps {
   onAddCard?: (columnId: string) => void;
   onEditCard?: (cardId: string, title: string, description: string) => void;
   onDeleteCard?: (cardId: string) => void;
+  onReorderColumns?: (columns: ColumnProps[]) => void;
 }
 
 export const Board = ({
@@ -29,6 +31,22 @@ export const Board = ({
       onAddColumn(id);
     }
   };
+  
+  // Sort columns by their order property
+  const sortedColumns = [...columns].sort((a, b) => {
+    if (a.order !== undefined && b.order !== undefined) {
+      return a.order - b.order;
+    }
+    if (a.order !== undefined) return -1;
+    if (b.order !== undefined) return 1;
+    return 0;
+  });
+  
+  // Get column IDs for the sortable context
+  const columnIds = sortedColumns.map(column => column.id);
+  
+  // Note: Column reordering is now handled in the parent App component
+  // This is to avoid conflicts between nested DndContext components
 
   return (
     <div className="flex flex-col h-full border boder-5 border-red-200">
@@ -39,19 +57,22 @@ export const Board = ({
       </div>
       <div className="flex-1 bg-gray-50 overflow-x-auto p-4">
         <div className="flex h-full items-start">
-          {columns.map((column) => (
-            <Column
-              key={column.id}
-              id={column.id}
-              title={column.title}
-              cards={column.cards}
-              onEditColumn={onEditColumn}
-              onDeleteColumn={onDeleteColumn}
-              onAddCard={onAddCard}
-              onEditCard={onEditCard}
-              onDeleteCard={onDeleteCard}
-            />
-          ))}
+          <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+            {sortedColumns.map((column) => (
+              <Column
+                key={column.id}
+                id={column.id}
+                title={column.title}
+                cards={column.cards}
+                order={column.order}
+                onEditColumn={onEditColumn}
+                onDeleteColumn={onDeleteColumn}
+                onAddCard={onAddCard}
+                onEditCard={onEditCard}
+                onDeleteCard={onDeleteCard}
+              />
+            ))}
+          </SortableContext>
           <div className="bg-gray-100 rounded-lg shadow-sm w-72 h-min mx-2 overflow-hidden">
             <button
               onClick={handleAddColumn}

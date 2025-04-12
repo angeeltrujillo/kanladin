@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import { Card, CardProps } from './Card';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 export interface ColumnProps {
   id: string;
@@ -20,6 +21,7 @@ export const Column = ({
   id,
   title,
   cards = [],
+  order,
   onAddCard,
   onEditCard,
   onDeleteCard,
@@ -44,6 +46,32 @@ export const Column = ({
   
   const cardIds = sortedCards.map(card => card.id);
 
+  // Make the column sortable (for column reordering) with a specific drag handle
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({
+    id,
+    data: {
+      type: 'column',
+      id,
+      order
+    }
+  });
+  
+  // Style for the sortable column
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 999 : 1,
+  };
+  
+  // We still need the droppable functionality for cards
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `droppable-${id}`,
     data: {
@@ -75,10 +103,17 @@ export const Column = ({
     }
   };
 
+  // Use a single ref for the column
+  const setColumnRef = (node: HTMLElement | null) => {
+    setSortableRef(node);
+    setDroppableRef(node);
+  };
+  
   return (
     <div 
-      ref={setDroppableRef}
-      className={`bg-gray-100 rounded-lg shadow-sm w-72 flex flex-col max-h-[90vh] mx-2 ${isOver ? 'ring-2 ring-blue-400' : ''}`}
+      ref={setColumnRef}
+      style={style}
+      className={`bg-gray-100 rounded-lg shadow-sm w-72 flex flex-col max-h-[90vh] mx-2 ${isOver ? 'ring-2 ring-blue-400' : ''} ${isDragging ? 'shadow-xl' : ''}`}
     >
       <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
         {isEditing ? (
@@ -100,9 +135,20 @@ export const Column = ({
           </div>
         ) : (
           <div className="flex justify-between items-center">
-            <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wide">
-              {title} <span className="text-gray-500 font-normal">({sortedCards.length})</span>
-            </h2>
+            <div className="flex items-center">
+              {/* Prominent drag handle for column reordering */}
+              <div
+                {...attributes}
+                {...listeners}
+                className="mr-2 p-1 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-200 cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                aria-label="Drag column"
+              >
+                <Bars3Icon className="w-5 h-5" />
+              </div>
+              <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wide">
+                {title} <span className="text-gray-500 font-normal">({sortedCards.length})</span>
+              </h2>
+            </div>
             <div className="flex space-x-1">
               <button
                 onClick={handleEditColumn}
@@ -146,7 +192,7 @@ export const Column = ({
           className="w-full py-2 px-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-md border border-gray-300 shadow-sm flex items-center justify-center space-x-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <PlusIcon className="w-4 h-4" />
-          <span>Add a card</span>
+          <span>Add a card 1</span>
         </button>
       </div>
     </div>

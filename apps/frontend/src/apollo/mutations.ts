@@ -99,3 +99,24 @@ export const DELETE_COLUMN = gql`
     }
   }
 `;
+
+export const UPDATE_COLUMN_ORDER = gql`
+  mutation UpdateColumnOrder($id: ID!, $order: Int!) {
+    updateColumn(id: $id, order: $order) {
+      column {
+        id
+        title
+        boardId
+        order
+      }
+    }
+  }
+`;
+
+export const UPDATE_MULTIPLE_COLUMN_ORDERS = gql`
+  mutation UpdateMultipleColumnOrders($columns: [ID!]!) {
+    updateColumnOrder(columns: $columns) {
+      success
+    }
+  }
+`;
