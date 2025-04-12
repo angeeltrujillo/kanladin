@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { Board } from './components/Board';
 import { Card, CardProps } from './components/Card';
 import { ColumnProps } from './components/Column';
 import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { GET_BOARDS } from './apollo/queries';
+import { CREATE_CARD, UPDATE_CARD, DELETE_CARD, MOVE_CARD, CREATE_COLUMN, UPDATE_COLUMN, DELETE_COLUMN } from './apollo/mutations';
 import { BoardsData } from './types/graphql';
 
 // Empty columns array for initialization
 const emptyColumns: ColumnProps[] = [];
 
 function App() {
-  const { loading, error, data } = useQuery<BoardsData>(GET_BOARDS);
+  const { loading, error, data, refetch } = useQuery<BoardsData>(GET_BOARDS);
   
   const convertToColumnProps = (data?: BoardsData): ColumnProps[] => {
     if (!data || !data.boards || data.boards.length === 0) {
@@ -36,8 +37,6 @@ function App() {
   
   // Initialize state with data from API or fallback data
   const [columns, setColumns] = useState<ColumnProps[]>(convertToColumnProps(data));
-  const [nextCardId, setNextCardId] = useState(7);
-  const [nextColumnId, setNextColumnId] = useState(4);
   const [activeCard, setActiveCard] = useState<CardProps | null>(null);
   
   // Update columns when data is loaded from the API
@@ -46,6 +45,42 @@ function App() {
       setColumns(convertToColumnProps(data));
     }
   }, [data]);
+
+  // Setup mutation hooks
+  const [createColumnMutation] = useMutation(CREATE_COLUMN, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error creating column:', error)
+  });
+  
+  const [updateColumnMutation] = useMutation(UPDATE_COLUMN, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error updating column:', error)
+  });
+  
+  const [deleteColumnMutation] = useMutation(DELETE_COLUMN, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error deleting column:', error)
+  });
+  
+  const [createCardMutation] = useMutation(CREATE_CARD, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error creating card:', error)
+  });
+  
+  const [updateCardMutation] = useMutation(UPDATE_CARD, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error updating card:', error)
+  });
+  
+  const [deleteCardMutation] = useMutation(DELETE_CARD, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error deleting card:', error)
+  });
+  
+  const [moveCardMutation] = useMutation(MOVE_CARD, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error moving card:', error)
+  });
 
   // Setup sensors for drag and drop
   const sensors = useSensors(
@@ -59,54 +94,119 @@ function App() {
 
   // Column handlers
   const handleAddColumn = () => {
+    // Get board ID from data (we only have one board in our demo)
+    const boardId = data?.boards[0].id;
+    if (!boardId) return;
+    
+    // Calculate new column order (max order + 1)
+    const maxOrder = columns.reduce((max, col) => Math.max(max, col.order || 0), -1);
+    const newOrder = maxOrder + 1;
+    
+    // Optimistically update UI
     const newColumn: ColumnProps = {
-      id: `col-${nextColumnId}`,
+      id: `temp-${Date.now()}`, // Temporary ID until we get the real one from the server
       title: `New Column`,
+      order: newOrder,
       cards: []
     };
     setColumns([...columns, newColumn]);
-    setNextColumnId(nextColumnId + 1);
+    
+    // Call mutation
+    createColumnMutation({
+      variables: {
+        title: 'New Column',
+        boardId,
+        order: newOrder
+      }
+    });
   };
 
   const handleEditColumn = (columnId: string, title: string) => {
+    // Optimistically update UI
     setColumns(columns.map(column => 
       column.id === columnId ? { ...column, title } : column
     ));
+    
+    // Call mutation
+    updateColumnMutation({
+      variables: {
+        id: columnId,
+        title
+      }
+    });
   };
 
   const handleDeleteColumn = (columnId: string) => {
+    // Optimistically update UI
     setColumns(columns.filter(column => column.id !== columnId));
+    
+    // Call mutation
+    deleteColumnMutation({
+      variables: {
+        id: columnId
+      }
+    });
   };
 
   // Card handlers
   const handleAddCard = (columnId: string) => {
+    // Optimistically update UI
+    const tempId = `temp-${Date.now()}`;
     const newCard: CardProps = {
-      id: `card-${nextCardId}`,
+      id: tempId,
       title: 'New Task',
-      description: ''
+      description: '',
+      columnId: columnId
     };
+    
     setColumns(columns.map(column => 
       column.id === columnId 
         ? { ...column, cards: [...column.cards, newCard] } 
         : column
     ));
-    setNextCardId(nextCardId + 1);
+    
+    // Call mutation
+    createCardMutation({
+      variables: {
+        title: 'New Task',
+        description: '',
+        columnId: columnId
+      }
+    });
   };
 
   const handleEditCard = (cardId: string, title: string, description: string) => {
+    // Optimistically update UI
     setColumns(columns.map(column => ({
       ...column,
       cards: column.cards.map(card => 
         card.id === cardId ? { ...card, title, description } : card
       )
     })));
+    
+    // Call mutation
+    updateCardMutation({
+      variables: {
+        id: cardId,
+        title,
+        description
+      }
+    });
   };
 
   const handleDeleteCard = (cardId: string) => {
+    // Optimistically update UI
     setColumns(columns.map(column => ({
       ...column,
       cards: column.cards.filter(card => card.id !== cardId)
     })));
+    
+    // Call mutation
+    deleteCardMutation({
+      variables: {
+        id: cardId
+      }
+    });
   };
 
   // Handle drag start event to set the active card
@@ -208,7 +308,16 @@ function App() {
             return column;
           });
           
+          // Update UI optimistically
           setColumns(updatedColumns);
+          
+          // Call mutation to update the card's column in the database
+          moveCardMutation({
+            variables: {
+              id: active.id.toString(),
+              columnId: targetColumnId
+            }
+          });
         }
       }
       // If we're dropping directly on a column
@@ -248,7 +357,16 @@ function App() {
           return column;
         });
         
+        // Update UI optimistically
         setColumns(updatedColumns);
+        
+        // Call mutation to update the card's column in the database
+        moveCardMutation({
+          variables: {
+            id: active.id.toString(),
+            columnId: targetColumnId
+          }
+        });
       }
     }
   };

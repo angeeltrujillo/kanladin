@@ -8,6 +8,7 @@ export interface ColumnProps {
   id: string;
   title: string;
   cards: CardProps[];
+  order?: number;
   onAddCard?: (columnId: string) => void;
   onEditCard?: (cardId: string, title: string, description: string) => void;
   onDeleteCard?: (cardId: string) => void;
