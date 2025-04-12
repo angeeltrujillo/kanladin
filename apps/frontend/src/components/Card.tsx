@@ -9,6 +9,7 @@ export interface CardProps {
   title: string;
   description: string;
   columnId?: string;
+  order?: number;
   onEdit?: (id: string, title: string, description: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -55,7 +56,15 @@ export const Card = ({
     if (onEdit) {
       onEdit(id, editedTitle, editedDescription);
     }
+    // Ensure we exit editing mode and don't immediately re-enter it
     setIsEditing(false);
+    
+    // Add a small delay to prevent any event propagation issues
+    setTimeout(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }, 50);
   };
 
   const handleDelete = () => {
@@ -79,12 +88,49 @@ export const Card = ({
             type="text"
             value={editedTitle}
             onChange={(e) => setEditedTitle(e.target.value)}
+            onKeyDown={(e) => {
+              // Prevent space key and other keys from triggering other events
+              e.stopPropagation();
+              
+              // Cancel editing on Escape key
+              if (e.key === 'Escape') {
+                setIsEditing(false);
+                setEditedTitle(title);
+                setEditedDescription(description);
+              }
+              
+              // Save on Enter key
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevent default Enter behavior
+                setIsEditing(false);
+                handleSave();
+              }
+            }}
             className="w-full px-3 py-2 text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
             placeholder="Card title"
+            autoFocus
           />
           <textarea
             value={editedDescription}
             onChange={(e) => setEditedDescription(e.target.value)}
+            onKeyDown={(e) => {
+              // Prevent all keyboard events from bubbling up
+              e.stopPropagation();
+              
+              // Cancel editing on Escape key
+              if (e.key === 'Escape') {
+                setIsEditing(false);
+                setEditedTitle(title);
+                setEditedDescription(description);
+              }
+              
+              // Allow Enter key for new lines, but Ctrl+Enter to save
+              if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault(); // Prevent default Enter behavior
+                setIsEditing(false);
+                handleSave();
+              }
+            }}
             className="w-full px-3 py-2 text-gray-600 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[80px] resize-none"
             placeholder="Add a description..."
           />

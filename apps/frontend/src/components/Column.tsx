@@ -29,7 +29,20 @@ export const Column = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
 
-  const cardIds = cards.map(card => card.id);
+  // Sort cards by their order property before rendering
+  const sortedCards = [...cards].sort((a, b) => {
+    // If order is defined for both cards, sort by order
+    if (a.order !== undefined && b.order !== undefined) {
+      return a.order - b.order;
+    }
+    // If only one card has order defined, prioritize it
+    if (a.order !== undefined) return -1;
+    if (b.order !== undefined) return 1;
+    // If neither has order defined, maintain original order
+    return 0;
+  });
+  
+  const cardIds = sortedCards.map(card => card.id);
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `droppable-${id}`,
@@ -88,7 +101,7 @@ export const Column = ({
         ) : (
           <div className="flex justify-between items-center">
             <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wide">
-              {title} <span className="text-gray-500 font-normal">({cards.length})</span>
+              {title} <span className="text-gray-500 font-normal">({sortedCards.length})</span>
             </h2>
             <div className="flex space-x-1">
               <button
@@ -112,13 +125,14 @@ export const Column = ({
 
       <div className="p-2 flex-1 overflow-y-auto space-y-2">
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-          {cards.map((card) => (
+          {sortedCards.map((card) => (
             <Card
               key={card.id}
               id={card.id}
               title={card.title}
               description={card.description}
               columnId={id}
+              order={card.order}
               onEdit={onEditCard}
               onDelete={onDeleteCard}
             />

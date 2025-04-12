@@ -6,7 +6,7 @@ import { ColumnProps } from './components/Column';
 import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { GET_BOARDS } from './apollo/queries';
-import { CREATE_CARD, UPDATE_CARD, DELETE_CARD, MOVE_CARD, CREATE_COLUMN, UPDATE_COLUMN, DELETE_COLUMN } from './apollo/mutations';
+import { CREATE_CARD, UPDATE_CARD, DELETE_CARD, MOVE_CARD, UPDATE_CARD_ORDER, CREATE_COLUMN, UPDATE_COLUMN, DELETE_COLUMN } from './apollo/mutations';
 import { BoardsData } from './types/graphql';
 
 // Empty columns array for initialization
@@ -80,6 +80,11 @@ function App() {
   const [moveCardMutation] = useMutation(MOVE_CARD, {
     onCompleted: () => refetch(),
     onError: (error) => console.error('Error moving card:', error)
+  });
+  
+  const [updateCardOrderMutation] = useMutation(UPDATE_CARD_ORDER, {
+    onCompleted: () => refetch(),
+    onError: (error) => console.error('Error updating card order:', error)
   });
 
   // Setup sensors for drag and drop
@@ -267,18 +272,37 @@ function App() {
         
         // If same column, just reorder
         if (sourceColumn.id === targetColumnId) {
+          // Find the indices for reordering
+          const oldIndex = sourceColumn.cards.findIndex(card => card.id === active.id);
+          const newIndex = sourceColumn.cards.findIndex(card => card.id === over.id);
+          
+          // Create a new array of cards in the new order
+          const reorderedCards = arrayMove(sourceColumn.cards, oldIndex, newIndex);
+          
+          // Update the order property of each card based on its new position
+          const updatedCards = reorderedCards.map((card, index) => ({
+            ...card,
+            order: index
+          }));
+          
+          // Update the UI optimistically
           setColumns(columns.map(column => {
             if (column.id === sourceColumn.id) {
-              const oldIndex = column.cards.findIndex(card => card.id === active.id);
-              const newIndex = column.cards.findIndex(card => card.id === over.id);
-              
               return {
                 ...column,
-                cards: arrayMove(column.cards, oldIndex, newIndex)
+                cards: updatedCards
               };
             }
             return column;
           }));
+          
+          // Call the mutation to update the card order in the database
+          updateCardOrderMutation({
+            variables: {
+              id: active.id.toString(),
+              order: newIndex
+            }
+          });
         } 
         // If different column, move card between columns
         else {
@@ -297,12 +321,23 @@ function App() {
               
               if (!draggedCard) return column;
               
+              // Insert the card at the new position with updated column ID and order
               const newCards = [...column.cards];
-              newCards.splice(newIndex, 0, {...draggedCard, columnId: targetColumnId});
+              newCards.splice(newIndex, 0, {
+                ...draggedCard, 
+                columnId: targetColumnId,
+                order: newIndex
+              });
+              
+              // Update order for all cards in the target column
+              const updatedCards = newCards.map((card, index) => ({
+                ...card,
+                order: index
+              }));
               
               return {
                 ...column,
-                cards: newCards
+                cards: updatedCards
               };
             }
             return column;
@@ -311,11 +346,16 @@ function App() {
           // Update UI optimistically
           setColumns(updatedColumns);
           
+          // Get the index where the card was inserted
+          const targetColumn = columns.find(col => col.id === targetColumnId);
+          const insertIndex = targetColumn?.cards.findIndex(card => card.id === over.id) || 0;
+          
           // Call mutation to update the card's column in the database
           moveCardMutation({
             variables: {
               id: active.id.toString(),
-              columnId: targetColumnId
+              columnId: targetColumnId,
+              order: insertIndex
             }
           });
         }
@@ -349,9 +389,18 @@ function App() {
             
             if (!draggedCard) return column;
             
+            // Calculate the order for the new card (at the end of the column)
+            const newOrder = column.cards.length;
+            
+            // Add the card to the end of the column with updated columnId and order
+            const updatedCards = [
+              ...column.cards, 
+              {...draggedCard, columnId: targetColumnId, order: newOrder}
+            ];
+            
             return {
               ...column,
-              cards: [...column.cards, {...draggedCard, columnId: targetColumnId}]
+              cards: updatedCards
             };
           }
           return column;
@@ -361,10 +410,15 @@ function App() {
         setColumns(updatedColumns);
         
         // Call mutation to update the card's column in the database
+        // Get the target column and calculate the order (at the end of the column)
+        const targetColumn = columns.find(col => col.id === targetColumnId);
+        const newOrder = targetColumn ? targetColumn.cards.length : 0;
+        
         moveCardMutation({
           variables: {
             id: active.id.toString(),
-            columnId: targetColumnId
+            columnId: targetColumnId,
+            order: newOrder
           }
         });
       }

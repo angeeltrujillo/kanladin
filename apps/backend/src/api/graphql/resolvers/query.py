@@ -63,7 +63,8 @@ class Query(graphene.ObjectType):
                 id=card.id,
                 title=card.title,
                 description=card.description,
-                column_id=card.column_id
+                column_id=card.column_id,
+                order=card.order
             ) 
             for card in cards
         ]

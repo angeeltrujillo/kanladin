@@ -15,6 +15,7 @@ export const GET_BOARDS = gql`
           title
           description
           columnId
+          order
         }
       }
     }
@@ -36,6 +37,7 @@ export const GET_BOARD = gql`
           title
           description
           columnId
+          order
         }
       }
     }

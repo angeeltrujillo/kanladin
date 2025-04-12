@@ -137,23 +137,34 @@ class CreateCard(graphene.Mutation):
         title = graphene.String(required=True)
         description = graphene.String()
         column_id = graphene.ID(required=True)
+        order = graphene.Int()
     
     card = graphene.Field(CardType)
     
-    def mutate(self, info, title, column_id, description=""):
+    def mutate(self, info, title, column_id, description="", order=None):
         # Verify column exists
         column = ColumnService.get_column_by_id(column_id)
         if not column:
             raise Exception(f"Column with ID {column_id} not found")
         
+        # If order is not specified, get the highest order in the column and add 1
+        if order is None:
+            cards = CardService.get_cards_by_column_id(column_id)
+            if cards:
+                highest_order = max(card.order for card in cards)
+                order = highest_order + 1
+            else:
+                order = 0
+        
         card_id = f"card-{uuid.uuid4().hex[:8]}"
-        card = Card(id=card_id, title=title, description=description, column_id=column_id)
+        card = Card(id=card_id, title=title, description=description, column_id=column_id, order=order)
         created_card = CardService.create_card(card)
         return CreateCard(card=CardType(
             id=created_card.id,
             title=created_card.title,
             description=created_card.description,
-            column_id=created_card.column_id
+            column_id=created_card.column_id,
+            order=created_card.order
         ))
 
 class UpdateCard(graphene.Mutation):
@@ -163,10 +174,11 @@ class UpdateCard(graphene.Mutation):
         title = graphene.String()
         description = graphene.String()
         column_id = graphene.ID()
+        order = graphene.Int()
     
     card = graphene.Field(CardType)
     
-    def mutate(self, info, id, title=None, description=None, column_id=None):
+    def mutate(self, info, id, title=None, description=None, column_id=None, order=None):
         card = CardService.get_card_by_id(id)
         if not card:
             raise Exception(f"Card with ID {id} not found")
@@ -181,13 +193,16 @@ class UpdateCard(graphene.Mutation):
             if not column:
                 raise Exception(f"Column with ID {column_id} not found")
             card.column_id = column_id
+        if order is not None:
+            card.order = order
         
         updated_card = CardService.update_card(card)
         return UpdateCard(card=CardType(
             id=updated_card.id,
             title=updated_card.title,
             description=updated_card.description,
-            column_id=updated_card.column_id
+            column_id=updated_card.column_id,
+            order=updated_card.order
         ))
 
 class DeleteCard(graphene.Mutation):
@@ -210,10 +225,11 @@ class MoveCard(graphene.Mutation):
     class Arguments:
         id = graphene.ID(required=True)
         column_id = graphene.ID(required=True)
+        order = graphene.Int()
     
     card = graphene.Field(CardType)
     
-    def mutate(self, info, id, column_id):
+    def mutate(self, info, id, column_id, order=None):
         # Verify card exists
         card = CardService.get_card_by_id(id)
         if not card:
@@ -224,13 +240,106 @@ class MoveCard(graphene.Mutation):
         if not column:
             raise Exception(f"Column with ID {column_id} not found")
         
+        # Store original column ID and order
+        original_column_id = card.column_id
+        original_order = card.order
+        
+        # If moving to a new column and order is not specified, add to the end
+        if card.column_id != column_id and order is None:
+            target_column_cards = CardService.get_cards_by_column_id(column_id)
+            if target_column_cards:
+                highest_order = max(c.order for c in target_column_cards)
+                order = highest_order + 1
+            else:
+                order = 0
+        
+        # 1. Update the source column cards (close the gap)
+        if original_column_id != column_id:  # Only if moving to a different column
+            source_column_cards = CardService.get_cards_by_column_id(original_column_id)
+            for c in source_column_cards:
+                # Skip the card being moved
+                if c.id == id:
+                    continue
+                # Shift cards after the moved card up one spot
+                if c.order > original_order:
+                    c.order -= 1
+                    CardService.update_card(c)
+        
+        # 2. Update the target column cards (make space)
+        if order is not None:
+            target_column_cards = CardService.get_cards_by_column_id(column_id)
+            for c in target_column_cards:
+                # Skip the card being moved
+                if c.id == id:
+                    continue
+                # Shift cards at or after the insertion point down one spot
+                if c.order >= order:
+                    c.order += 1
+                    CardService.update_card(c)
+        
+        # 3. Finally, update the moved card's column and order
         card.column_id = column_id
+        if order is not None:
+            card.order = order
+            
         updated_card = CardService.update_card(card)
         return MoveCard(card=CardType(
             id=updated_card.id,
             title=updated_card.title,
             description=updated_card.description,
-            column_id=updated_card.column_id
+            column_id=updated_card.column_id,
+            order=updated_card.order
+        ))
+
+class UpdateCardOrder(graphene.Mutation):
+    """Mutation to update the order of a card within its column"""
+    class Arguments:
+        id = graphene.ID(required=True)
+        order = graphene.Int(required=True)
+    
+    card = graphene.Field(CardType)
+    
+    def mutate(self, info, id, order):
+        # Get the card to be reordered
+        card = CardService.get_card_by_id(id)
+        if not card:
+            raise Exception(f"Card with ID {id} not found")
+        
+        # Get all cards in the same column
+        column_cards = CardService.get_cards_by_column_id(card.column_id)
+        
+        # Store the original order of the card being moved
+        original_order = card.order
+        
+        # Update the order of all affected cards in the column
+        for c in column_cards:
+            # Skip the card being moved
+            if c.id == id:
+                continue
+                
+            # If moving card down (to a higher order)
+            if order > original_order:
+                # Shift cards between original position and new position up one spot
+                if original_order < c.order <= order:
+                    c.order -= 1
+                    CardService.update_card(c)
+            # If moving card up (to a lower order)
+            elif order < original_order:
+                # Shift cards between new position and original position down one spot
+                if order <= c.order < original_order:
+                    c.order += 1
+                    CardService.update_card(c)
+        
+        # Finally, update the moved card's order
+        card.order = order
+        updated_card = CardService.update_card(card)
+        
+        return UpdateCardOrder(card=CardType(
+            id=updated_card.id,
+            title=updated_card.title,
+            description=updated_card.description,
+            column_id=updated_card.column_id,
+            order=updated_card.order
         ))
 
 class Mutation(graphene.ObjectType):
@@ -250,3 +359,4 @@ class Mutation(graphene.ObjectType):
     update_card = UpdateCard.Field()
     delete_card = DeleteCard.Field()
     move_card = MoveCard.Field()
+    update_card_order = UpdateCardOrder.Field()

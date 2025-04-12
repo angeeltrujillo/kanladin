@@ -6,3 +6,4 @@ class CardType(graphene.ObjectType):
     title = graphene.String()
     description = graphene.String()
     column_id = graphene.String()
+    order = graphene.Int()

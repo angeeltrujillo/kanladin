@@ -7,8 +7,9 @@ class CardService:
     
     @staticmethod
     def get_all_cards() -> List[Card]:
-        """Get all cards"""
-        return CardRepository.get_all()
+        """Get all cards sorted by order"""
+        cards = CardRepository.get_all()
+        return sorted(cards, key=lambda card: card.order)
     
     @staticmethod
     def get_card_by_id(card_id: str) -> Optional[Card]:
@@ -17,8 +18,9 @@ class CardService:
     
     @staticmethod
     def get_cards_by_column_id(column_id: str) -> List[Card]:
-        """Get all cards for a specific column"""
-        return CardRepository.get_by_column_id(column_id)
+        """Get all cards for a specific column, sorted by order"""
+        cards = CardRepository.get_by_column_id(column_id)
+        return sorted(cards, key=lambda card: card.order)
     
     @staticmethod
     def create_card(card: Card) -> Card:

@@ -1,12 +1,12 @@
 # Hardcoded data for our Kanban board
 
 cards_data = [
-    {"id": "card-1", "title": "Research API options", "description": "Compare REST vs GraphQL for our backend", "columnId": "col-1"},
-    {"id": "card-2", "title": "Design database schema", "description": "Create initial schema for DynamoDB", "columnId": "col-1"},
-    {"id": "card-3", "title": "Setup project structure", "description": "", "columnId": "col-1"},
-    {"id": "card-4", "title": "Create UI components", "description": "Build Card and Column components with Tailwind", "columnId": "col-2"},
-    {"id": "card-5", "title": "Implement drag and drop", "description": "Use DnD Kit library", "columnId": "col-2"},
-    {"id": "card-6", "title": "Project setup", "description": "Initialize repository and configure tools", "columnId": "col-3"},
+    {"id": "card-1", "title": "Research API options", "description": "Compare REST vs GraphQL for our backend", "columnId": "col-1", "order": 0},
+    {"id": "card-2", "title": "Design database schema", "description": "Create initial schema for DynamoDB", "columnId": "col-1", "order": 1},
+    {"id": "card-3", "title": "Setup project structure", "description": "", "columnId": "col-1", "order": 2},
+    {"id": "card-4", "title": "Create UI components", "description": "Build Card and Column components with Tailwind", "columnId": "col-2", "order": 0},
+    {"id": "card-5", "title": "Implement drag and drop", "description": "Use DnD Kit library", "columnId": "col-2", "order": 1},
+    {"id": "card-6", "title": "Project setup", "description": "Initialize repository and configure tools", "columnId": "col-3", "order": 0},
 ]
 
 columns_data = [
