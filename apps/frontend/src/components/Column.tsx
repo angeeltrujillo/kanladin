@@ -113,7 +113,7 @@ export const Column = ({
     <div 
       ref={setColumnRef}
       style={style}
-      className={`bg-gray-100 rounded-lg shadow-sm w-72 flex flex-col max-h-[90vh] mx-2 ${isOver ? 'ring-2 ring-blue-400' : ''} ${isDragging ? 'shadow-xl' : ''}`}
+      className={`bg-gray-100 rounded-lg shadow-sm w-72 flex flex-col h-[90vh] mx-2 ${isOver ? 'ring-2 ring-blue-400' : ''} ${isDragging ? 'shadow-xl' : ''}`}
     >
       <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
         {isEditing ? (
@@ -170,20 +170,26 @@ export const Column = ({
       </div>
 
       <div className="p-2 flex-1 overflow-y-auto space-y-2">
-        <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-          {sortedCards.map((card) => (
-            <Card
-              key={card.id}
-              id={card.id}
-              title={card.title}
-              description={card.description}
-              columnId={id}
-              order={card.order}
-              onEdit={onEditCard}
-              onDelete={onDeleteCard}
-            />
-          ))}
-        </SortableContext>
+        {sortedCards.length > 0 ? (
+          <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+            {sortedCards.map((card) => (
+              <Card
+                key={card.id}
+                id={card.id}
+                title={card.title}
+                description={card.description}
+                columnId={id}
+                order={card.order}
+                onEdit={onEditCard}
+                onDelete={onDeleteCard}
+              />
+            ))}
+          </SortableContext>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500 text-sm">No tasks</p>
+          </div>
+        )}
       </div>
 
       <div className="p-2 border-t border-gray-200">
@@ -192,7 +198,7 @@ export const Column = ({
           className="w-full py-2 px-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-md border border-gray-300 shadow-sm flex items-center justify-center space-x-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <PlusIcon className="w-4 h-4" />
-          <span>Add a card 1</span>
+          <span>Add a card</span>
         </button>
       </div>
     </div>
