@@ -9,3 +9,6 @@ export type { ColumnProps } from './types/column.types';
 
 // Export utilities
 export { sortCards, getCardIds } from './utils/columnUtils';
+
+// Export GraphQL mutations
+export * from './graphql';

@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Board } from './features/board';
-import { Card, CardProps } from './features/card';
-import { ColumnProps } from './features/column';
+import { Board, GET_BOARDS } from './features/board';
+import { Card, CardProps, CREATE_CARD, UPDATE_CARD, DELETE_CARD, MOVE_CARD, UPDATE_CARD_ORDER } from './features/card';
+import { ColumnProps, CREATE_COLUMN, UPDATE_COLUMN, DELETE_COLUMN, UPDATE_MULTIPLE_COLUMN_ORDERS } from './features/column';
 import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import { GET_BOARDS } from './apollo/queries';
-import { CREATE_CARD, UPDATE_CARD, DELETE_CARD, MOVE_CARD, UPDATE_CARD_ORDER, CREATE_COLUMN, UPDATE_COLUMN, DELETE_COLUMN, UPDATE_MULTIPLE_COLUMN_ORDERS } from './apollo/mutations';
 import { BoardsData } from './types/graphql';
 
 // Empty columns array for initialization
@@ -110,10 +108,9 @@ function App() {
     if (!boardId) return;
     
     // Calculate new column order (max order + 1)
-    // Use timestamp to ensure uniqueness in case of rapid column creation
     const maxOrder = columns.reduce((max, col) => Math.max(max, col.order || 0), -1);
-    const timestamp = Date.now();
-    const newOrder = maxOrder + 1 + (timestamp % 1000) / 1000;
+    const timestamp = Date.now(); // Still needed for the temporary ID
+    const newOrder = maxOrder + 1;
     
     // Optimistically update UI
     const newColumn: ColumnProps = {

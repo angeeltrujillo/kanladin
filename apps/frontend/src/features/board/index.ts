@@ -9,3 +9,6 @@ export type { BoardProps } from './types/board.types';
 
 // Export utilities
 export { sortColumns, getColumnIds } from './utils/boardUtils';
+
+// Export GraphQL mutations
+export * from './graphql';

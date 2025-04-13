@@ -9,3 +9,6 @@ export { CardActions } from './components/CardActions';
 
 // Export types
 export type { CardProps } from './types/card.types';
+
+// Export GraphQL mutations
+export * from './graphql';
