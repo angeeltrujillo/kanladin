@@ -10,7 +10,8 @@ import { AddCardButton } from './AddCardButton';
 
 /**
  * Column component for displaying and managing a column in a Kanban board
- */
+*/
+
 export const Column: FC<ColumnProps> = ({
   id,
   title,

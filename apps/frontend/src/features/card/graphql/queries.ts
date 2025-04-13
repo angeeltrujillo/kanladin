@@ -4,7 +4,7 @@ import { gql } from '@apollo/client';
  * GraphQL queries for card operations
  */
 
-// Query to get cards for a specific column
+// Implemented, but not used currently.
 export const GET_CARDS = gql`
   query GetCards($columnId: ID) {
     cards(column_id: $columnId) {

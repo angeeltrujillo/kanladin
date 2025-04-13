@@ -35,12 +35,10 @@ export const CardEditForm: FC<CardEditFormProps> = ({
         onKeyDown={(e) => {
           // Prevent space key and other keys from triggering other events
           e.stopPropagation();
-          
           // Cancel editing on Escape key
           if (e.key === 'Escape') {
             onCancel();
           }
-          
           // Save on Enter key
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault(); // Prevent default Enter behavior
@@ -57,12 +55,10 @@ export const CardEditForm: FC<CardEditFormProps> = ({
         onKeyDown={(e) => {
           // Prevent all keyboard events from bubbling up
           e.stopPropagation();
-          
           // Cancel editing on Escape key
           if (e.key === 'Escape') {
             onCancel();
           }
-          
           // Allow Enter key for new lines, but Ctrl+Enter to save
           if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault(); // Prevent default Enter behavior

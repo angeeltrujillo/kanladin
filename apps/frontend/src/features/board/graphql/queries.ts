@@ -26,7 +26,7 @@ export const GET_BOARDS = gql`
   }
 `;
 
-// Query to get a specific board by ID
+// Implemented, but not used currently.
 export const GET_BOARD = gql`
   query GetBoard($id: ID!) {
     board(id: $id) {

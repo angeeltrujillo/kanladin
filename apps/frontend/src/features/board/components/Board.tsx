@@ -6,7 +6,7 @@ import { BoardContent } from './BoardContent';
 
 /**
  * Board component for displaying and managing a Kanban board
- */
+*/
 export const Board: FC<BoardProps> = ({
   id,
   title,
