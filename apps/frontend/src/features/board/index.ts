@@ -5,6 +5,6 @@ export { AddColumnButton } from './components/AddColumnButton';
 
 export type { BoardProps } from './types/board.types';
 
-export { sortColumns, getColumnIds } from './utils/boardUtils';
+export { sortByOrder as sortColumns, getIds as getColumnIds } from '../../utils/sorting';
 
 export * from './graphql';

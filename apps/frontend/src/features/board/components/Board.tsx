@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { BoardProps } from '../types/board.types';
-import { sortColumns, getColumnIds } from '../utils/boardUtils';
+import { sortByOrder as sortColumns, getIds as getColumnIds } from '../../../utils/sorting';
 import { BoardHeader } from './BoardHeader';
 import { BoardContent } from './BoardContent';
 

@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { ColumnProps } from '../types/column.types';
-import { sortCards, getCardIds } from '../utils/columnUtils';
+import { sortByOrder as sortCards, getIds as getCardIds } from '../../../utils/sorting';
 import { ColumnHeader } from './ColumnHeader';
 import { ColumnContent } from './ColumnContent';
 import { AddCardButton } from './AddCardButton';
