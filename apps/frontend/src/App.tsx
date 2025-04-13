@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { Board } from './features/board';
 import { Card, CardProps } from './features/card';
-import { ColumnProps } from './components/Column';
+import { ColumnProps } from './features/column';
 import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { GET_BOARDS } from './apollo/queries';

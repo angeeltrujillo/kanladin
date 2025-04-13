@@ -1,4 +1,4 @@
-import { ColumnProps } from '../../../components/Column';
+import { ColumnProps } from '../../column';
 
 /**
  * Sort columns by their order property

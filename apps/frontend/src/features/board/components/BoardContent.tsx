@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Column, ColumnProps } from '../../../components/Column';
+import { Column, ColumnProps } from '../../column';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { AddColumnButton } from './AddColumnButton';
 

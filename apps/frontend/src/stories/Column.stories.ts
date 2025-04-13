@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import '../index.css'
 
-import { Column } from '../components/Column';
+import { Column } from '../features/column';
 
 const meta = {
   title: 'Kanban/Column',
