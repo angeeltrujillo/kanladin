@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, Bars3Icon } from '@heroicons/react/24/outline';
-import { Card, CardProps } from './Card';
+import { Card, CardProps } from '../features/card';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';

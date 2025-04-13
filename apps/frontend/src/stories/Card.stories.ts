@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import '../index.css'
 
-import { Card } from '../components/Card';
+import { Card } from '../features/card';
 
 const meta = {
   title: 'Kanban/Card',
