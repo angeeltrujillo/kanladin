@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Board } from './components/Board';
+import { Board } from './features/board';
 import { Card, CardProps } from './features/card';
 import { ColumnProps } from './components/Column';
 import { DndContext, closestCenter, DragEndEvent, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragOverlay } from '@dnd-kit/core';
@@ -110,12 +110,14 @@ function App() {
     if (!boardId) return;
     
     // Calculate new column order (max order + 1)
+    // Use timestamp to ensure uniqueness in case of rapid column creation
     const maxOrder = columns.reduce((max, col) => Math.max(max, col.order || 0), -1);
-    const newOrder = maxOrder + 1;
+    const timestamp = Date.now();
+    const newOrder = maxOrder + 1 + (timestamp % 1000) / 1000;
     
     // Optimistically update UI
     const newColumn: ColumnProps = {
-      id: `temp-${Date.now()}`, // Temporary ID until we get the real one from the server
+      id: `temp-${timestamp}`, // Temporary ID until we get the real one from the server
       title: `New Column`,
       order: newOrder,
       cards: []
