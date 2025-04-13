@@ -10,5 +10,9 @@ export { CardActions } from './components/CardActions';
 // Export types
 export type { CardProps } from './types/card.types';
 
+// Export context and hooks
+export { CardProvider } from './context/CardContext';
+export { useCard } from './hooks/useCardContext';
+
 // Export GraphQL mutations
 export * from './graphql';

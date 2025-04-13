@@ -5,6 +5,7 @@ export interface Card {
   title: string;
   description: string;
   columnId: string;
+  order?: number;
 }
 
 export interface Column {

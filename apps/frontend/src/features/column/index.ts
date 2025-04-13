@@ -7,6 +7,10 @@ export { AddCardButton } from './components/AddCardButton';
 // Export types
 export type { ColumnProps } from './types/column.types';
 
+// Export context and hooks
+export { ColumnProvider } from './context/ColumnContext';
+export { useColumn } from './hooks/useColumnContext';
+
 // Export utilities
 export { sortByOrder as sortCards, getIds as getCardIds } from '../../utils/sorting';
 
