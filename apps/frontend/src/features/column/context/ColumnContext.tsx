@@ -28,7 +28,7 @@ export const ColumnProvider: React.FC<ColumnContextProps> = ({ children }) => {
   };
 
   const handleReorderColumns = (columnIds: string[]) => {
-    reorderColumns(columnIds, columns, setColumns);
+    reorderColumns(columnIds);
   };
 
   const value = {

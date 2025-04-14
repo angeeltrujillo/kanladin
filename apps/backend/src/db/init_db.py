@@ -60,8 +60,31 @@ def seed_data():
 def init_database():
     """Initialize the database by creating tables and seeding data"""
     try:
+        # Create tables first
+        logger.info("Creating DynamoDB tables if they don't exist...")
         create_tables()
+        
+        # Verify tables exist before seeding
+        logger.info("Verifying tables exist...")
+        tables_to_verify = [
+            settings.DYNAMODB_BOARDS_TABLE,
+            settings.DYNAMODB_COLUMNS_TABLE,
+            settings.DYNAMODB_CARDS_TABLE
+        ]
+        
+        for table_name in tables_to_verify:
+            try:
+                # This will throw an exception if the table doesn't exist
+                dynamodb.client.meta.client.describe_table(TableName=table_name)
+                logger.info(f"Verified table {table_name} exists")
+            except Exception as e:
+                logger.error(f"Table {table_name} does not exist or is not accessible: {e}")
+                raise
+        
+        # Seed data after tables are verified
+        logger.info("Seeding database with initial data...")
         seed_data()
+        
         logger.info("Database initialization complete")
     except Exception as e:
         logger.error(f"Error initializing database: {e}")

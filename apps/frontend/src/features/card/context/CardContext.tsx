@@ -32,7 +32,7 @@ export const CardProvider: React.FC<CardContextProps> = ({ children }) => {
   };
 
   const handleMoveCard = (cardId: string, targetColumnId: string, newOrder: number) => {
-    moveCard(cardId, targetColumnId, newOrder, columns, setColumns);
+    moveCard(cardId, targetColumnId, newOrder);
   };
 
   const handleUpdateCardOrder = (cardId: string, newOrder: number) => {
