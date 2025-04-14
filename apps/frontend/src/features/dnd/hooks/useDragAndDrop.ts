@@ -2,11 +2,16 @@ import { useState } from 'react';
 import { DragEndEvent, DragStartEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { CardProps } from '../../card';
 import { ColumnProps } from '../../column';
+import { useCard } from '../../card/hooks/useCardContext';
+import { useColumn } from '../../column/hooks/useColumnContext';
 
 /**
  * Hook for managing drag and drop functionality
  */
 export const useDragAndDrop = (columns: ColumnProps[], setColumns: React.Dispatch<React.SetStateAction<ColumnProps[]>>) => {
+  // Get card and column operations from context
+  const { handleMoveCard } = useCard();
+  const { handleReorderColumns } = useColumn();
   // Active card state for drag overlay
   const [activeCard, setActiveCard] = useState<CardProps | null>(null);
 
@@ -112,12 +117,17 @@ export const useDragAndDrop = (columns: ColumnProps[], setColumns: React.Dispatc
       sourceColumn.cards.splice(sourceCardIndex, 1);
 
       // Add card to target column
+      const newOrder = targetCardIndex;
       targetColumn.cards.splice(targetCardIndex, 0, {
         ...card,
-        columnId: targetColumn.id
+        columnId: targetColumn.id,
+        order: newOrder
       });
 
       setColumns(newColumns);
+      
+      // Call the mutation to update the backend
+      handleMoveCard(card.id, targetColumn.id, newOrder);
     } else {
       // We're dropping directly on a column
       // Find the target column
@@ -136,12 +146,17 @@ export const useDragAndDrop = (columns: ColumnProps[], setColumns: React.Dispatc
       sourceColumn.cards.splice(sourceCardIndex, 1);
 
       // Add card to target column at the end
+      const newOrder = targetColumn.cards.length;
       targetColumn.cards.push({
         ...card,
-        columnId: targetColumn.id
+        columnId: targetColumn.id,
+        order: newOrder
       });
 
       setColumns(newColumns);
+      
+      // Call the mutation to update the backend
+      handleMoveCard(card.id, targetColumn.id, newOrder);
     }
   };
 
@@ -158,6 +173,11 @@ export const useDragAndDrop = (columns: ColumnProps[], setColumns: React.Dispatc
     reorderedColumns.splice(newIndex, 0, removed);
 
     setColumns(reorderedColumns);
+    
+    // Call the mutation to update the backend
+    // Extract the column IDs in the new order
+    const columnIds = reorderedColumns.map(column => column.id);
+    handleReorderColumns(columnIds);
   };
 
   return {
