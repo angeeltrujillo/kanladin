@@ -32,26 +32,6 @@ Kanladin follows a feature-based architecture that organizes code by domain feat
 - **Custom Hooks**: Encapsulated business logic in reusable hooks
 - **GraphQL API**: Apollo Client for data fetching and mutations
 
-### Directory Structure
-
-```
-/apps
-  /frontend             # React frontend application
-    /src
-      /features         # Feature-based organization
-        /board          # Board feature
-        /column         # Column feature
-        /card           # Card feature
-        /dnd            # Drag and drop feature
-        /kanban         # Main Kanban board composition
-      /utils            # Shared utilities
-      /types            # TypeScript type definitions
-  /backend              # Python GraphQL backend
-    /graphql            # GraphQL schema and resolvers
-    /models             # Data models
-    /services           # Business logic
-```
-
 ## Getting Started
 
 ### Prerequisites

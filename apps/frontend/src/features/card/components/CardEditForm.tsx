@@ -40,7 +40,7 @@ export const CardEditForm: FC<CardEditFormProps> = ({
             onCancel();
           }
           // Save on Enter key
-          if (e.key === 'Enter' && !e.shiftKey) {
+          if (e.key === 'Enter' && !e.shiftKey && e.ctrlKey) {
             e.preventDefault(); // Prevent default Enter behavior
             handleSave();
           }
